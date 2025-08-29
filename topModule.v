@@ -1,5 +1,8 @@
-`timescale 1ns/1ps
+`timescale 10ns/1ns
 //Don't forget to import your module files here
+`include "shift.v"
+`include "Mod1.v"
+`include "ModProcess.v"
 
 module topModule(
     input wire receiveData,
@@ -9,8 +12,8 @@ module topModule(
 );
 
     // Include your submodules for receiving, processing and transmitting your data here, we have included sample modules without any inputs and outputs for now
-    RxD R0();
-    distanceProcess D0();
-    TxD T0();
+    //RxD R0();
+    //distanceProcess D0();
+    //TxD T0();
 
 endmodule
