@@ -26,8 +26,8 @@ module distanceProcess(input wire clock,
     wire [23:0] multipliedval2;
     reg [7:0] lowestcount;
     reg [7:0] highestcount;
-    assign multipliedval1 = (FSA*(length-lowestcount-1) + LSA*(lowestcount));
-    assign multipliedval2 = (FSA*(length-highestcount-1) + LSA*(highestcount));
+    assign multipliedval1 = (FSA*(length-lowestcount-8'h01) + LSA*(lowestcount));
+    assign multipliedval2 = (FSA*(length-highestcount-8'h01) + LSA*(highestcount));
 
     reg trig_div;
     wire div_res1;
@@ -159,9 +159,9 @@ module distanceProcess(input wire clock,
                     DIVD : begin
                         counter <= counter + 1;
                         if (counter == trimmed_length) begin 
-                            execstate <= DIST;//this CODE IS KINDA WRONG> IT SHOULD BE DATA[1],DATA[2]
+                            execstate <= DIST;
                         end//im assuming least count is 0.1mm and not 1 mm
-                        if ({data[2*counter+1],data[2*counter]} < 16'b0000001000000000) begin
+                        if (data[counter] < 16'b0000001000000000) begin
                             hitvector[counter] <= 1'b1;
                         end
                         else hitvector[counter] <= 1'b0;
