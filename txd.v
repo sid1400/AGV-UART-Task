@@ -82,6 +82,7 @@ module TxD (
 endmodule
 
 
+/*
 module testbench;
 wire testout, testbusy;
 reg clock, reset, flashin;
@@ -126,4 +127,4 @@ initial begin
   $display ("Data: %h", data);
 end
 endmodule
-
+*/

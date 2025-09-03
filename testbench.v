@@ -56,7 +56,7 @@ module testbench;
 
     wire TXD_OUTPUT;
     wire TXD_write;
-    TxD Transmit(clk,reset,16'hAA55,{DX_LOWEST,DX_HIGHEST,DX_HITOUT},DX_fleshout,DX_fleshout,TXD_OUTPUT,TXD_write);
+    TxD Transmit(clk,reset,16'hAA55,{DX_LOWEST,DX_HIGHEST,DX_HITOUT},DX_fleshout,TXD_OUTPUT,TXD_write);
     
     initial begin
         $dumpfile("testbench.vcd");
