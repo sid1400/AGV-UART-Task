@@ -1,4 +1,4 @@
-
+`include "txd.v"
 module RxD(input wire stream, 
     input wire clock,
     input wire reset,
@@ -16,19 +16,64 @@ module RxD(input wire stream,
     reg [7:0] MEMA;
     reg [7:0] MEMB;
 
-    shiftreg buffer(stream,clock,~clock_trig,reset,buffer_out);
-    counter BC(clock,clock_trig,reset,clock_out);
+    reg trig_half;
+    reg trig_clock;
+    wire uart_clock_out;
+    wire half_done;
+    main_clock uartclock(clock,reset,trig_clock,uart_clock_out);
+    timed_pulse halfclock(clock,reset,trig_half,half_done);
 
+    shiftreg buffer(stream,uart_clock_out,clock,~clock_trig,reset,buffer_out);
+    counter BC(uart_clock_out,clock,clock_trig,reset,clock_out);
 
-
-    always @(posedge clock) begin
+    always @(posedge clock) begin // fast clock 
         if (!reset) begin
             if (state == 0) begin
+                if (stream == 0 && !trig_clock && !trig_half) begin
+                    trig_half <=1;
+                end
+                if (half_done == 1) begin
+                    trig_half <=0;
+                    trig_clock <=1;
+                    clock_trig <=1;
+                    infodump <= 1'b0;
+                    state <= 1;
+                end
+                if (stream == 1 && !trig_half) begin
+                    trig_half <=0;
+                    trig_clock <=0;
+                    clock_trig <=0;
+                    infodump <= 1'b0;
+                end
+            end
+            if (infodump <= 1'b1) begin infodump <= 1'b0;info_pulse<= 1'b0; end
+        end
+        else begin
+            state <= 3'b000;
+            ignore_all <= 1'b1;
+            clock_trig <= 1'b0;
+            MEMA <= 8'b00000000;
+            MEMB <=8'b00000000;
+            outstream <= 8'b00000000;
+            infodump <=1'b0;
+            info_pulse <= 1'b0;
+            trig_clock <= 1'b0;
+            trig_half <= 1'b0;
+        end
+    end
+
+    always @(posedge uart_clock_out) begin
+        if (!reset) begin
+            if (state == 0) begin
+                /*
+                if (!trig_clock && !trig_half) begin
                 clock_trig <=0;
                 infodump <= 1'b0;
-                if (stream == 0) begin state <= 3'b001; clock_trig <=1'b1;end
+                end
+                if (stream == 0) begin state <= 3'b001; clock_trig <=1'b1;end */
             end
             else begin
+                /*
                 if (info_pulse) begin
                     info_pulse <= 1'b0;
                     infodump <= 1'b1;
@@ -36,7 +81,7 @@ module RxD(input wire stream,
                 else begin
                     infodump <= 1'b0;
 
-                end
+                end*/
                 case(state)
                     3'b001 : begin
                         if (clock_out) begin
@@ -59,7 +104,7 @@ module RxD(input wire stream,
                             state <= 3'b100;
                             if ((MEMA == 8'h55) && (MEMB == 8'hAA)) begin 
                                 ignore_all <=1'b0;
-                                info_pulse <=1;
+                                infodump <=1;
                             end
                             else ignore_all <=1'b1;
                         end
@@ -68,11 +113,11 @@ module RxD(input wire stream,
                         if (clock_out) begin
                             MEMA-=1;
                             outstream <= buffer_out;
-                            if (ignore_all==0) info_pulse<=1;
+                            if (ignore_all==0) infodump<=1;
                             if (MEMA == 0)  state <=3'b101; 
                         end
                         else
-                            info_pulse<=0;
+                            infodump<=0;
                     end
                     3'b101 : begin state <= 3'b000; infodump=1'b0;info_pulse=1'b0; end
                 endcase
@@ -87,6 +132,8 @@ module RxD(input wire stream,
             outstream <= 8'b00000000;
             infodump <=1'b0;
             info_pulse <= 1'b0;
+            trig_clock <= 1'b0;
+            trig_half <= 1'b0;
         end
     end
 endmodule

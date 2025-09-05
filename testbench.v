@@ -4,15 +4,19 @@ module testbench;
     wire [7:0]out;
     reg reset =0;
     wire clk;
-    clock cock(clk);
+    masterclock cock(clk);
     wire connect;
     siggen sig(connect);
     wire [7:0]RDX_MEMA;
     wire [7:0]RDX_MEMB;
+    wire RDX_half_clock;
+    wire RDX_full_clock;
     wire RDX_infotime;
     wire [7:0]RDX_InfoPulse;
     wire [7:0]RDX_shiftSTORE;
     RxD RRR(connect,clk,reset,RDX_InfoPulse,RDX_infotime);
+    assign RDX_half_clock = RRR.half_done;
+    assign RDX_full_clock = RRR.uart_clock_out;
 
     wire [15:0]DX_LOWEST;
     wire [15:0]DX_HIGHEST;
@@ -21,7 +25,6 @@ module testbench;
     distanceProcess DDD(clk,RDX_InfoPulse,RDX_infotime,reset,DX_LOWEST,DX_HIGHEST,DX_HITOUT,DX_fleshout);
     wire [8:0] DX_DDDlength;
     wire [8:0] DX_DDDlengthnoncopy;
-    wire [3:0] DX_DDDlengthnoncopylimit;
     wire [3:0] DX_DDDlengthlimit;
     wire [3:0] DX_execstate;
     wire [23:0] mult1;
@@ -31,7 +34,6 @@ module testbench;
     assign DX_DDDlength = DDD.lengthcopy;
     assign DX_DDDlengthnoncopy = DDD.length;
     assign DX_DDDlengthlimit = DDD.trimmed_length;
-    assign DX_DDDlengthnoncopylimit = DDD.trimmed_lengthcopy;
     assign DX_execstate = DDD.execstate;
     wire [15:0] DX_quot;
     assign DX_quot = DDD.divider1.lessbig;
@@ -42,10 +44,11 @@ module testbench;
     reg flesh;
     div DIVIDE(24'h2BA891,8'h3A,flesh,clk,reset,quotient,divdone);
     assign BIG = DIVIDE.biginp;  */
-
+    localparam TIME = 43400;
     wire [2:0]RDX_state;
     wire RDX_babydonthurtme;
     wire [2:0] RDX_babydonthurtmecount;
+    wire [2:0]RDX_count;
 
     assign RDX_MEMA = RRR.MEMA;
     assign RDX_MEMB = RRR.MEMB;
@@ -54,18 +57,17 @@ module testbench;
     assign RDX_count = RRR.BC.store;
     assign RDX_babydonthurtme = RRR.ignore_all;
 
-    wire TXD_OUTPUT;
     wire TXD_write;
-    TxD Transmit(clk,reset,16'hAA55,{DX_LOWEST,DX_HIGHEST,DX_HITOUT},DX_fleshout,TXD_OUTPUT,TXD_write);
+    TxD Transmit(clk,reset,16'hAA55,{DX_LOWEST,DX_HIGHEST,DX_HITOUT},DX_fleshout,TXD_write);
     
     initial begin
         $dumpfile("testbench.vcd");
         $dumpvars(1,testbench);
         reset = 1;
-        #2;
+        #(TIME);
         reset = 0;
-        #2;
-        #1800;
+        #(TIME);
+        #(1200*TIME);
         $finish(1);
     end
 endmodule
@@ -85,7 +87,18 @@ module clock(output reg out);
     end
 endmodule
 
+module masterclock(output reg out);
+    localparam TIME = 43400;
+    initial begin
+        out = 0;
+    end
+    always begin
+        #5 out <= !out;
+    end
+endmodule
+
 module siggen(output reg out);
+    localparam TIME = 43400;
     reg [15:0]reg1 = 16'hAA55;
     reg [103:0]reg2 = 104'h78452390782211CDAB9CA1FB04;
     reg [359:0]amigay = 360'h117512342000212111110FAB11ABABCD112312340310029903000ABCAAAAA0BC00AB00070008FBAD3311001114; //womp womp sha356 aaa key
@@ -93,18 +106,18 @@ module siggen(output reg out);
     integer i;
     initial begin
         out = 1'b1;
-        #4;
+        #(4*TIME);
         out =1'b0;
-        #2;
+        #(2*TIME);
         for (i = 0;i<16;i++) begin
             out=reg1[i];
-            #2;
+            #(2*TIME);
         end
         for (i = 0;i<360;i++) begin
             out=amigay[i];
-            #2;
+            #(2*TIME);
         end
-        assign out = 1'b1;#2;
+        assign out = 1'b1;#(2*TIME);
         
     end
 endmodule

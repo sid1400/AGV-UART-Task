@@ -1,9 +1,8 @@
-`timescale 10ns/1ns
+`timescale 1ns/1ps
 //Don't forget to import your module files here
 `include "shift.v"
 `include "Mod1.v"
 `include "ModProcess.v"
-`include "txd.v"
 
 
 module topModule(

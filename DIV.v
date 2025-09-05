@@ -25,7 +25,7 @@ module div(input [23:0]big,
                     end
                     end
                 IVAL: begin
-                    if (biginp > (smallinp<<counter)) begin
+                    if (biginp >= (smallinp<<counter)) begin
                         biginp <= biginp - (smallinp<<counter);
                         lessbig[counter] <= 1'b1;
                     end

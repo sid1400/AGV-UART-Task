@@ -13,12 +13,11 @@ module distanceProcess(input wire clock,
     reg [7:0]length; 
     reg [8:0]lengthcopy;
     reg [3:0] trimmed_length;
-    reg [3:0] trimmed_lengthcopy;
     reg [15:0]FSA;
     reg [15:0]LSA;
     reg [15:0]data[255:0];
     reg [3:0] execstate;
-    reg [4:0] datastate;//32 locs
+    reg [8:0] datastate;//so many locs
     reg [7:0] counter;
 
     //used for the multiplication circuitary
@@ -58,8 +57,8 @@ module distanceProcess(input wire clock,
                     IDLE: begin
                         length <= datain;
                         lengthcopy <= 2*datain;// used for looping through elements
-                        if (datain > 4'b1111) begin trimmed_length <= 4'b1111; trimmed_lengthcopy <= 4'b1111; end
-                        else begin trimmed_length <= datain[3:0]; trimmed_lengthcopy <= datain[3:0]; end
+                        if (datain > 4'b1111) begin trimmed_length <= 4'b1111;end
+                        else begin trimmed_length <= datain[3:0]; end
                         execstate <=L_IN;
                     end
                     L_IN: begin
@@ -76,9 +75,12 @@ module distanceProcess(input wire clock,
                     end
                     LSA1: begin
                         LSA[15:8] <= datain;
-                        execstate <=LSA2;                        
+                        execstate <=LSA2;
+                        datastate <= 9'o000;                        
                     end
+                    /*
                     LSA2: begin
+                        $display(data[datastate]);
                         lengthcopy <= lengthcopy-1;
                             if (datastate[0]) begin
                             data[datastate[4:1]][15:8] <= datain;
@@ -91,7 +93,26 @@ module distanceProcess(input wire clock,
                         lengthcopy <= 2*length; 
                         counter <= 8'h00; 
                         end
+                    end */ // what dog?
+                    
+
+                    LSA2: begin
+                        //$display("%h",data[datastate[8:1]-1]);
+                        datastate <= datastate+1;
+                        if (datastate[0]) begin
+                        data[datastate[8:1]][15:8] <= datain;
+                        end
+                        else begin
+                        data[datastate[8:1]][7:0] <= datain;    
+                        end
+                        if (datastate == lengthcopy-1) 
+                        begin execstate <= DATA;
+                        //lengthcopy <= 2*length; 
+                        counter <= 8'h00; 
+                        end
                     end
+
+
                 endcase
             end
             case (execstate)
@@ -106,7 +127,7 @@ module distanceProcess(input wire clock,
                     end
                     DATA: begin
                         counter <= counter + 1;
-                        if (counter == lengthcopy) begin execstate <= LOWA; counter <= 8'h00; end
+                        if (counter == length-1) begin execstate <= LOWA; counter <= 8'h00;end
                         if (counter == 0) begin
                             lowestcount <= 8'h00;
                             lowest <= data[0];
@@ -120,7 +141,7 @@ module distanceProcess(input wire clock,
                     end
                     LOWA: begin
                         counter <= counter + 1;
-                        if (counter == lengthcopy) begin execstate <= HIGA;trig_div<=1'b1; counter <= 8'h00; end;
+                        if (counter == length-1) begin execstate <= HIGA;trig_div<=1'b1; counter <= 8'h00; end;
                         if (counter == 0) begin
                             highestcount <= 8'h00;
                             highest <= data[0];
@@ -158,17 +179,18 @@ module distanceProcess(input wire clock,
 
                     DIVD : begin
                         counter <= counter + 1;
-                        if (counter == trimmed_length) begin 
-                            execstate <= DIST;
+                        if (counter == trimmed_length-1) begin 
+                            execstate <= DIST; counter <= 8'h00;
                         end//im assuming least count is 0.1mm and not 1 mm
-                        if (data[counter] < 16'b0000001000000000) begin
+                        if (data[counter] < 16'h400) begin
                             hitvector[counter] <= 1'b1;
                         end
                         else hitvector[counter] <= 1'b0;
                     end
                     DIST : begin
                         flashout <=1;
-                        execstate = IDLE;
+                        if (counter) execstate <= IDLE;
+                        else counter <= 8'h01;
                     end
 
                     
@@ -178,11 +200,10 @@ module distanceProcess(input wire clock,
             else begin
                 flashout <=0;
                 execstate <= IDLE;
-                datastate <= 5'b00000;
+                datastate <= 9'o000;
                 length <= 8'h00;
                 lengthcopy <= 9'h00;
                 trimmed_length <= 4'h0;
-                trimmed_lengthcopy <= 4'h0;
                 FSA <= 16'h0000;
                 LSA <= 16'h0000;
                 hitvector <= 16'h0000;
@@ -191,7 +212,6 @@ module distanceProcess(input wire clock,
                 highest <= 16'h0000; 
                 lowestcount <= 8'h00;
                 highestcount <= 8'h00;
-                hitvector <= 16'h0000;
                 trig_div <= 1'b0;
                 for (i =0;i<256;i++) begin
                     data[i] <= 16'h0000;

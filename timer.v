@@ -1,6 +1,3 @@
-
-//`timescale 1ns/1ps
-
 module ext_clock (
     input wire clock,
     input wire reset,
@@ -33,11 +30,11 @@ module main_clock (
     output reg main_clk
 );
 parameter CYCLE = 4340;
-reg [14:0] count = 15'b0;
+reg [23:0] count = 24'b0;
 
 always @(posedge clock or posedge reset) begin
     if(reset || !enable) begin
-        count <= 15'b0;
+        count <= 24'b0;
         main_clk <= 0;
     end
     else begin
@@ -58,43 +55,47 @@ module timed_pulse (
     input wire enable,
     output reg timed_pulse
 );
-    parameter CYCLE = 2170;
+    parameter CYCLE = 3*4340;
     reg state;
-    reg [14:0] count;
+    reg [23:0] count;
     always @(posedge clock or posedge reset) begin
         if(reset) begin
             state <= 1'b0;
             timed_pulse <= 0;
-            count <= 15'b0;
+            count <= 24'b0;
         end
+        else begin
         case (state)
             1'b0 : begin
                 timed_pulse <= 0;
-                if(enable) begin count <= CYCLE-1; timed_pulse <= 1; state <= 1'b1; end
+                if(enable) begin count <= CYCLE-1; timed_pulse <= 0; state <= 1'b1;$display(CYCLE);$display($time); end
             end
             1'b1 : begin
                 if(!enable) begin 
                     state <= 1'b0; 
                     timed_pulse <= 0;
-                    count <= 15'b0; 
+                    count <= 24'b0; 
                 end
-                else if(count > 15'b0) begin
-                    timed_pulse <= 1;
+                else if(count > 24'b0) begin
+                    timed_pulse <= 0;
                     count <= count-1;
                 end
                 else begin
-                    timed_pulse <= 0;
-                    count <= 15'b0;
+                    timed_pulse <= 1;
+                    count <= 24'b0;
                 end
             end
             default : begin
                 state <= 1'b0;
                 timed_pulse <= 0;
-                count <= 15'b0;
+                count <= 24'b0;
             end
         endcase
+        end
     end
 endmodule
+
+
 
 
 /*
@@ -122,20 +123,24 @@ module testbench;
     );
     initial #10000000 $finish;
     initial begin
-    clock = 0; // 100MHz clock with 50% duty cycle
+    clock = 1; // 100MHz clock with 50% duty cycle
     forever #5 clock = ~clock;
     end
     initial fork
         reset = 1;
         enable = 0;
-        #1 reset = 0;
+        #1000 reset = 0;
         #10000 enable = 1;
+        #300000 reset = 1;
+        #350000 reset = 0;
         #700000 enable = 0;
+        #750000 enable = 1;
+        #1500000 enable = 0;
     join
 
     // For waveform generation
     initial begin
-    $dumpfile("multi.vcd");
+    $dumpfile("timer.vcd");
     $dumpvars(0, testbench);
     end
 endmodule
