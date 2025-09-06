@@ -29,7 +29,7 @@ module main_clock (
     input wire enable,
     output reg main_clk
 );
-parameter CYCLE = 4340;
+parameter CYCLE = 434;
 reg [23:0] count = 24'b0;
 
 always @(posedge clock or posedge reset) begin
@@ -55,7 +55,7 @@ module timed_pulse (
     input wire enable,
     output reg timed_pulse
 );
-    parameter CYCLE = 3*4340;
+    parameter CYCLE = 3*434;
     reg state;
     reg [23:0] count;
     always @(posedge clock or posedge reset) begin
@@ -68,7 +68,7 @@ module timed_pulse (
         case (state)
             1'b0 : begin
                 timed_pulse <= 0;
-                if(enable) begin count <= CYCLE-1; timed_pulse <= 0; state <= 1'b1;$display(CYCLE);$display($time); end
+                if(enable) begin count <= CYCLE-1; timed_pulse <= 0; state <= 1'b1; end
             end
             1'b1 : begin
                 if(!enable) begin 

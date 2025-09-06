@@ -52,9 +52,9 @@ module TxD (
         2'b01 : begin
           //regout[65] <= state[1]; //Start bit
           headout[15:0] <= lidar_header[15:0]; // Set Header to 0x55 0xAA
-          regout[47:32] <= data[23:16]; // Get obs_alert (2 bytes)
-          regout[31:16] <= data[15:0]; // Get max_distance_angle (2 bytes)
-          regout[15:0] <= data[47:32];  // Get max_distance_angle (2 bytes)
+          regout[47:32] <= data[15:0]; // Get _obs(2 bytes)
+          regout[15:0] <= data[47:32];  // Get min_distance_angle (2 bytes)
+          regout[31:16] <= data[31:16]; // Get max (2 bytes)
           //regout[0] <= state[0]; //Stop bit
           state <= 2'b11;
           enbclk <= 1'b1;
