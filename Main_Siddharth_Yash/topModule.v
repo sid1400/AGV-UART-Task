@@ -27,5 +27,5 @@ module topModule(
     wire DX_flashout;
     distanceProcess D0(clk,RDX_InfoPulse,RDX_infotime,reset,DX_LOWEST,DX_HIGHEST,DX_HITOUT,DX_flashout);
 
-    TxD T0(clk,reset,16'hAA55,{DX_LOWEST,DX_HIGHEST,DX_HITOUT},DX_flashout,transmitData);
+    TxD T0(clk,reset,16'h55AA,{DX_LOWEST,DX_HIGHEST,DX_HITOUT},DX_flashout,transmitData);
 endmodule
