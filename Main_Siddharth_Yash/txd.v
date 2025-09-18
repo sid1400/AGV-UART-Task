@@ -52,9 +52,9 @@ module TxD (
         2'b01 : begin
           //regout[65] <= state[1]; //Start bit
           headout[15:0] <= lidar_header[15:0]; // Set Header to 0x55 0xAA
-          regout[47:32] <= data[15:0]; // Get _obs(2 bytes)
-          regout[15:0] <= data[47:32];  // Get min_distance_angle (2 bytes)
-          regout[31:16] <= data[31:16]; // Get max (2 bytes)
+          regout[15:0] <= {data[7:0],data[15:8]}; // Get _obs(2 bytes)
+          regout[47:32] <= {data[39:32],data[47:40]};  // Get min_distance_angle (2 bytes)
+          regout[31:16] <= {data[23:16],data[31:24]}; // Get max (2 bytes)
           //regout[0] <= state[0]; //Stop bit
           state <= 2'b11;
           enbclk <= 1'b1;
@@ -75,9 +75,9 @@ module TxD (
             count <= count - 1;
           end
           else if(count > 0) begin
-            transmitData <= regout[0]; //LSB first
-            $display(regout[0]);
-            regout <= regout >> 1; // shift regout right
+            transmitData <= regout[47]; //LSB first
+            $display(regout[47]);
+            regout <= regout << 1; // shift regout right
             count <= count - 1;
           end
           else if (count == 0) begin

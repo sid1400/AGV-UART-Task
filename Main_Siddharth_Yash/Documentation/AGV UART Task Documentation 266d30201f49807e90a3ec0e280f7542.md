@@ -218,6 +218,20 @@ We had one issue implementing this, which was that the output was slightly off f
 5. Setup an internal clock according to the baud rate (using a Timer module).
 6. Transmit Data via UART to an output, (along with Start and Stop bits).
 
+## Inputs and Outputs:
+
+Inputs-
+
+1. `clock`- Represents the main 100Mhz clock
+2. `reset`- Resets everything to default values
+3. `lidar_header` - Containing the LiDAR header
+4. `data`- Containing the processed data to be transmitted - contains 6 bytes for the 3 variables
+5. `flashin` - To indicate start of the transmission process
+
+Outputs -
+
+1. `transmitData` - Pin of the UART Output
+
 ## Algorithm:
 
 1. Made Internal registers for getting the data, count for transmission, and state for the FSM.
@@ -240,7 +254,7 @@ transmitting from last bit `regout[16]`, and left shifting till data sent
 
 During debugging the output, i saw that the bit that was supposed to be first in regout was going to the last one.  
 
-![I scrapped the idea of including the start and stop bits in `regout` later ](234f9809-6508-4ed6-967f-863274e5fd09.png)
+![Screenshot 2025-09-05 151914.jpg](234f9809-6508-4ed6-967f-863274e5fd09.png)
 
 I scrapped the idea of including the start and stop bits in `regout` later 
 

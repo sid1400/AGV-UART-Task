@@ -12,7 +12,7 @@ module shiftreg#(parameter MSB =8)(
     always @ (posedge clk) begin
         if (!reset) begin
             if (!latch)
-            out <= {stream,out[MSB-1:1]};
+            out <= {out[MSB-2:0],stream};
         end
         else
             out <={(MSB-1){1'b0}};
@@ -52,4 +52,3 @@ module counter#(parameter size=3)(
         end
     end
 endmodule
-
